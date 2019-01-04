@@ -137,6 +137,27 @@ struct Object {
 }
 
 impl Object {
+
+    pub fn attack(&mut self, target: &mut Object) {
+        // a simple formula for attack damage
+        let damage = self.fighter.map_or(0, |f| f.power) - target.fighter.map_or(0, |f| f.defense);
+        if damage > 0 {
+            // make the target take some damage
+            println!("{} attacks {} for {} hit points.", self.name, target.name, damage);
+            target.take_damage(damage);
+        } else {
+            println!("{} attacks {} but it has no effect!", self.name, target.name);
+        }
+    }
+
+    pub fn take_damage(&mut self, damage: i32) {
+        // apply damage if possible
+        if let Some(fighter) = self.fighter.as_mut() {
+            if damage > 0 {
+                fighter.hp -= damage;
+            }
+        }
+    }
     /// return the distance to another object
     pub fn distance_to(&self, other: &Object) -> f32 {
         let dx = other.x - self.x;
@@ -182,26 +203,6 @@ impl Object {
  * function definitions
  */
 
-pub fn take_damage(&mut self, damage: i32) {
-    // apply damage if possible
-    if let Some(fighter) = self.fighter.as_mut() {
-        if damage > 0 {
-            fighter.hp -= damage;
-        }
-    }
-}
-
-pub fn attack(&mut self, target: &mut Object) {
-    // a simple formula for attack damage
-    let damage = self.fighter.map_or(0, |f| f.power) - target.fighter.map_or(0, |f| f.defense);
-    if damage > 0 {
-        // make the target take some damage
-        println!("{} attacks {} for {} hit points.", self.name, target.name, damage);
-        target.take_damage(damage);
-    } else {
-        println!("{} attacks {} but it has no effect!", self.name, target.name);
-    }
-}
 
 fn ai_take_turn(monster_id: usize, map: &Map, objects: &mut [Object], fov_map: &FovMap) {
     // a basic monster takes its turn. If you can see it, it can see you
@@ -478,8 +479,7 @@ fn main(){
 
     // Init the root window here. All other settings fallback to default
     let mut root = Root::initializer()
-        // .font("arial10x10.png", FontLayout::Tcod)
-        .font("arial10x10.png", FontLayout::Tcod)
+        .font("./fonts/arial10x10.png", FontLayout::Tcod)
         .font_type(FontType::Greyscale)
         .size(SCREEN_WIDTH, SCREEN_HEIGHT)
         .title("Rouge")
