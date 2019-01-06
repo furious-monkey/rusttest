@@ -15,6 +15,7 @@ use std::fs::File;
 use std::error::Error;
 
 use rand::Rng;
+use rand::distributions::{Weighted, WeightedChoice, IndependentSample};
 
 use std::cmp;
 
@@ -140,6 +141,12 @@ type Messages = Vec<(String, Color)>;
 /*
  * STRUCT, trait and IMPL definitions
  */
+
+
+struct Transition {
+    level: u32,
+    value: u32,
+}
 
 trait MessageLog {
     fn add<T: Into<String>>(&mut self, message: T, color: Color);
@@ -361,6 +368,15 @@ impl Object {
  * function definitions
  */
 
+/// Returns a value that depends on level. the table specifies what
+/// value occurs after each level, default is 0.
+fn from_dungeon_level(table: &[Transition], level: u32) -> u32 {
+    table.iter()
+        .rev()
+        .find(|transition| level >= transition.level)
+        .map_or(0, |transition| transition.value)
+}
+
 fn level_up(objects: &mut [Object], game: &mut Game, tcod: &mut Tcod) {
     let player = &mut objects[PLAYER];
     let level_up_xp = LEVEL_UP_BASE + player.level * LEVEL_UP_FACTOR;
@@ -442,6 +458,8 @@ fn target_tile(tcod: &mut Tcod,
             // render the screen. this erases the inventory and shows the names of
             // objects under the mouse.
             tcod.root.flush();
+
+
             let event = input::check_for_event(input::KEY_PRESS | input::MOUSE).map(|e| e.1);
             let mut key = None;
             match event {
@@ -848,7 +866,7 @@ fn move_towards(id: usize, target_x: i32, target_y: i32, map: &Map, objects: &mu
 }
 
 
-fn place_objects(room: Rect, objects: &mut Vec<Object>, map: &Map) {
+fn place_objects(room: Rect, objects: &mut Vec<Object>, map: &Map, level: u32) {
     // choose random number of monsters
     let num_monsters = rand::thread_rng().gen_range(0, MAX_ROOM_MONSTERS + 1);
 
@@ -857,30 +875,81 @@ fn place_objects(room: Rect, objects: &mut Vec<Object>, map: &Map) {
         let x = rand::thread_rng().gen_range(room.x1 + 1, room.x2);
         let y = rand::thread_rng().gen_range(room.y1 + 1, room.y2);
 
+
         // only place it if the tile is not blocked
         if !is_blocked(x, y, map, objects) {
-            let mut monster = if rand::random::<f32>() < 0.8 {  // 80% chance of getting an orc
-                // create an orc
-                let mut orc = Object::new(x, y, ORC, "orc", colors::DESATURATED_GREEN, true);
-                orc.fighter = Some(Fighter{max_hp: 10, hp: 10, defense: 0, power: 3, on_death: DeathCallback::Monster, xp: 10});
-                orc.ai = Some(Ai::Basic);
-                orc
-            } else {
-                // create a troll
-                let mut troll = Object::new(x, y, TROLL, "troll", colors::DARKER_GREEN, true);
-                troll.fighter = Some(Fighter{max_hp: 16, hp: 16, defense: 1, power: 4,
-                    on_death: DeathCallback::Monster, xp: 35});
-                troll.ai = Some(Ai::Basic);
-                troll
+
+            let max_monsters = from_dungeon_level(&[
+                Transition {level: 1, value: 2},
+                Transition {level: 4, value: 3},
+                Transition {level: 6, value: 5},
+            ], level);
+
+            // choose random number of monsters
+            let num_monsters = rand::thread_rng().gen_range(0, max_monsters + 1);
+
+            // monster random table
+            let troll_chance = from_dungeon_level(&[
+                Transition {level: 3, value: 15},
+                Transition {level: 5, value: 30},
+                Transition {level: 7, value: 60},
+            ], level);
+
+            let monster_chances = &mut [
+                Weighted {weight: 80, item: "orc"},
+                Weighted {weight: troll_chance, item: "troll"},
+            ];
+
+
+            let monster_choice = WeightedChoice::new(monster_chances);
+
+            let mut monster = match monster_choice.ind_sample(&mut rand::thread_rng()) {
+                "orc" => {
+                    // create an orc
+                    let mut orc = Object::new(x, y, ORC, "orc", colors::DESATURATED_GREEN, true);
+                    orc.fighter = Some(Fighter{max_hp: 40, hp: 20, defense: 0, power: 4, on_death: DeathCallback::Monster, xp: 10});
+                    orc.ai = Some(Ai::Basic);
+                    orc
+                }
+                "troll" => {
+                    // create a troll
+                    let mut troll = Object::new(x, y, TROLL, "troll", colors::DARKER_GREEN, true);
+                    troll.fighter = Some(Fighter{max_hp:60 , hp: 30, defense: 2, power: 8,
+                        on_death: DeathCallback::Monster, xp: 35});
+                    troll.ai = Some(Ai::Basic);
+                    troll
+                }
+                _ => unreachable!(),
             };
+
 
             monster.alive = true;
             objects.push(monster);
         }
     }
 
+
+
+// maximum number of items per room
+let max_items = from_dungeon_level(&[
+    Transition {level: 1, value: 1},
+    Transition {level: 4, value: 2},
+], level);
+
+// item random table
+let item_chances = &mut [
+    // healing potion always shows up, even if all other items have 0 chance
+    Weighted {weight: 35, item: Item::Heal},
+    Weighted {weight: from_dungeon_level(&[Transition{level: 4, value: 25}], level),
+              item: Item::Lightning},
+    Weighted {weight: from_dungeon_level(&[Transition{level: 6, value: 25}], level),
+              item: Item::Fireball},
+    Weighted {weight: from_dungeon_level(&[Transition{level: 2, value: 10}], level),
+              item: Item::Confuse},
+];
+
     // choose random number of items
-    let num_items = rand::thread_rng().gen_range(0, MAX_ROOM_ITEMS + 1);
+    let num_items = rand::thread_rng().gen_range(0, max_items + 1);
 
     for _ in 0..num_items {
         // choose random spot for this item
@@ -889,32 +958,46 @@ fn place_objects(room: Rect, objects: &mut Vec<Object>, map: &Map) {
 
         // only place it if the tile is not blocked
         if !is_blocked(x, y, map, objects) {
-            let dice = rand::random::<f32>();
-            let item = if dice < 0.7 {
-                // create a healing potion (70% chance)
-                let mut object = Object::new(x, y, 20u8 as char, "healing potion", colors::VIOLET, false);
-                object.item = Some(Item::Heal);
-                object
-            } 
-            else if dice < 0.7 + 0.15 {
-                // create a lightning bolt scroll (15% chance)
-                let mut object = Object::new(x, y, '-', "scroll of lightning bolt",
-                                             colors::LIGHT_YELLOW, false);
-                object.item = Some(Item::Lightning);
-                object
-            } else if dice < 0.7 + 0.1 + 0.1 {
-                // create a fireball scroll (10% chance)
-                let mut object = Object::new(x, y, '-', "scroll of fireball", colors::LIGHT_RED, false);
-                object.item = Some(Item::Fireball);
-                object
-            }
-            else {
-                // create a confuse scroll (15% chance)
-                let mut object = Object::new(x, y, '-', "scroll of confusion",
-                                             colors::AMBER, false);
-                object.item = Some(Item::Confuse);
-                object
+
+            // item random table
+            let item_chances = &mut [
+                Weighted {weight: 70, item: Item::Heal},
+                Weighted {weight: 10, item: Item::Lightning},
+                Weighted {weight: 10, item: Item::Fireball},
+                Weighted {weight: 10, item: Item::Confuse},
+            ];
+            let item_choice = WeightedChoice::new(item_chances);
+
+
+            let mut item = match item_choice.ind_sample(&mut rand::thread_rng()) {
+                Item::Heal => {
+                    // create a healing potion
+                    let mut object = Object::new(x, y, 20u8 as char, "healing potion", colors::VIOLET, false);
+                    object.item = Some(Item::Heal);
+                    object
+                }
+                Item::Lightning => {
+                    // create a lightning bolt scroll
+                    let mut object = Object::new(x, y, '-', "scroll of lightning bolt",
+                                                 colors::LIGHT_YELLOW, false);
+                    object.item = Some(Item::Lightning);
+                    object
+                }
+                Item::Fireball => {
+                    // create a fireball scroll
+                    let mut object = Object::new(x, y, '-', "scroll of fireball", colors::LIGHT_RED, false);
+                    object.item = Some(Item::Fireball);
+                    object
+                }
+                Item::Confuse => {
+                    // create a confuse scroll
+                    let mut object = Object::new(x, y, '-', "scroll of confusion",
+                                                 colors::AMBER, false);
+                    object.item = Some(Item::Confuse);
+                    object
+                }
             };
+
             objects.push(item);
         }
     }
@@ -983,7 +1066,7 @@ fn is_blocked(x: i32, y: i32, map: &Map, objects: &[Object]) -> bool {
 }
 
 
-fn make_map(objects: &mut Vec<Object>) -> Map {
+fn make_map(objects: &mut Vec<Object>, level: u32) -> Map {
     // fill map with "blocked" tiles
     let mut map = vec![vec![Tile::wall(); MAP_HEIGHT as usize]; MAP_WIDTH as usize];
 
@@ -1014,7 +1097,7 @@ fn make_map(objects: &mut Vec<Object>) -> Map {
             create_room(new_room, &mut map);
 
             // add some content to this room, such as monsters
-            place_objects(new_room, objects, &mut map);
+            place_objects(new_room, objects, &mut map, level as u32);
 
             // center coordinates of the new room, will be useful later
             let (new_x, new_y) = new_room.center();
@@ -1299,7 +1382,7 @@ fn new_game(tcod: &mut Tcod) -> (Vec<Object>, Game) {
     // create object representing the player
     let mut player = Object::new(0, 0, '@', "player", colors::WHITE, true);
     player.alive = true;
-    player.fighter = Some(Fighter{max_hp: 30, hp: 30, defense: 2, power: 5,
+    player.fighter = Some(Fighter{max_hp: 100, hp: 30, defense: 2, power: 5,
         on_death: DeathCallback::Player, xp: 0});
 
     // the list of objects with just the player
@@ -1307,7 +1390,7 @@ fn new_game(tcod: &mut Tcod) -> (Vec<Object>, Game) {
 
     let mut game = Game {
         // generate map (at this point it's not drawn to the screen)
-        map: make_map(&mut objects),
+        map: make_map(&mut objects, 1),
         // create the list of game messages and their colors, starts empty
         log: vec![],
         inventory: vec![],
@@ -1354,6 +1437,9 @@ fn play_game(objects: &mut Vec<Object>, game: &mut Game, tcod: &mut Tcod) {
         render_all(tcod, &objects, game, fov_recompute);
 
         tcod.root.flush();
+
+        // level up if needed
+        level_up(objects, game, tcod);
 
         // erase all objects at their old locations, before they move
         for object in objects.iter_mut() {
@@ -1455,6 +1541,6 @@ fn next_level(tcod: &mut Tcod, objects: &mut Vec<Object>, game: &mut Game) {
     game.log.add("After a rare moment of peace, you descend deeper into \
                   the heart of the dungeon...", colors::RED);
     game.dungeon_level += 1;
-    game.map = make_map(objects);
+    game.map = make_map(objects, game.dungeon_level);
     initialise_fov(&game.map, tcod);
 }
