@@ -85,7 +85,6 @@ const MAX_ROOMS: i32 = 30;
 const MAP_WIDTH: i32 = 80;
 const MAP_HEIGHT: i32 = 33;
 
-
 const COLOR_DARK_WALL: Color = Color { r: 64, g: 64, b: 64 };
 const COLOR_LIGHT_WALL: Color = Color { r: 130, g: 110, b: 50 };
 const COLOR_DARK_GROUND: Color = Color { r: 96, g: 96, b: 96 };
@@ -114,6 +113,7 @@ enum Item {
     Fireball,
     Sword,  
     Shield,  
+
 }
 
 
