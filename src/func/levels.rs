@@ -58,6 +58,10 @@ pub fn next_level(tcod: &mut Tcod, objects: &mut Vec<Object>, game: &mut Game) {
     game.log.add("After a rare moment of peace, you descend deeper into \
                   the heart of the dungeon...", colors::RED);
     game.dungeon_level += 1;
+
+    objects[PLAYER].fighter.as_mut().unwrap().xp += (game.dungeon_level * 10) as i32;
+
     game.map = make_map(objects, game.dungeon_level);
     initialise_fov(&game.map, tcod);
+
 }

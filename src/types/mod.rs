@@ -1,13 +1,4 @@
 use super::*;
-
-// Import types
-pub mod object;
-pub mod item;
-pub mod slot;
-pub mod deathcallback;
-pub mod rect;
-pub mod tile;
-
 use std::io::{Read, Write};
 use std::fs::File;
 use std::error::Error;
@@ -25,13 +16,22 @@ use tcod::input::Key;
 use tcod::input::{self, Event, Mouse};
 use tcod::input::KeyCode::*;
 
+// Import types
+pub mod object;
+pub mod item;
+pub mod slot;
+pub mod deathcallback;
+pub mod rect;
+pub mod tile;
+
+
 // Export Types
-use self::object::Object;
-use self::item::Item;
-use self::slot::Slot;
-use self::deathcallback::DeathCallback;
-use self::rect::Rect;
-use self::tile::Tile;
+pub use self::object::Object;
+pub use self::item::Item;
+pub use self::slot::Slot;
+pub use self::deathcallback::DeathCallback;
+pub use self::rect::Rect;
+pub use self::tile::Tile;
 
 
 // Smaller types

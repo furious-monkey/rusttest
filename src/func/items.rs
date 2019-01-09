@@ -159,7 +159,7 @@ pub fn place_objects(room: Rect, objects: &mut Vec<Object>, map: &Map, level: u3
                 "orc" => {
                     // create an orc
                     let mut orc = Object::new(x, y, ORC, "orc", colors::DESATURATED_GREEN, true);
-                    orc.fighter = Some(Fighter{base_max_hp: 40, hp: 20, base_defense: 0, base_power: 4, on_death: DeathCallback::Monster, xp: 10});
+                    orc.fighter = Some(Fighter{base_max_hp: from_dungeon_level(&[Transition { level: 1, value: 20 }, Transition { level:2 , value: 25}], level) as i32, hp: 20, base_defense: (level / 2) as i32, base_power: 4 + (level / 2) as i32, on_death: DeathCallback::Monster, xp: 10 * level as i32});
                     orc.ai = Some(Ai::Basic);
                     orc
                 }
@@ -167,7 +167,7 @@ pub fn place_objects(room: Rect, objects: &mut Vec<Object>, map: &Map, level: u3
                     // create a troll
                     let mut troll = Object::new(x, y, TROLL, "troll", colors::DARKER_GREEN, true);
                     troll.fighter = Some(Fighter{base_max_hp:60 , hp: 30, base_defense: 2, base_power: 8,
-                        on_death: DeathCallback::Monster, xp: 35});
+                        on_death: DeathCallback::Monster, xp: 35 * level as i32});
                     troll.ai = Some(Ai::Basic);
                     troll
                 }

@@ -15,12 +15,6 @@ use tcod::input::Key;
 use tcod::input::{self, Event, Mouse};
 use tcod::input::KeyCode::*;
 
-use crate::types::object::Object;
-use crate::types::item::Item;
-use crate::types::tile::Tile;
-use crate::types::rect::Rect;
-use crate::types::deathcallback::DeathCallback;
-use crate::types::slot::Slot;
 use crate::types::*;
 use crate::r#const::*;
 
@@ -29,10 +23,10 @@ pub mod combat;
 pub mod items;
 pub mod ui;
 
-use combat::*;
-use ui::*;
-use items::*;
-use levels::*;
+pub use combat::*;
+pub use ui::*;
+pub use items::*;
+pub use levels::*;
 
 // Handle keydown events here
 pub fn handle_keys(key: Key, tcod: &mut Tcod, objects: &mut Vec<Object>,
