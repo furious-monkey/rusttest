@@ -159,15 +159,51 @@ pub fn place_objects(room: Rect, objects: &mut Vec<Object>, map: &Map, level: u3
                 "orc" => {
                     // create an orc
                     let mut orc = Object::new(x, y, ORC, "orc", colors::DESATURATED_GREEN, true);
-                    orc.fighter = Some(Fighter{base_max_hp: from_dungeon_level(&[Transition { level: 1, value: 20 }, Transition { level:2 , value: 25}], level) as i32, hp: 20, base_defense: (level / 2) as i32, base_power: 4 + (level / 2) as i32, on_death: DeathCallback::Monster, xp: 10 * level as i32});
+                    orc.fighter = Some(Fighter {
+                        base_max_hp: from_dungeon_level(&[
+                                                        Transition { level: 1, value: 20 },
+                                                        Transition { level:2 , value: 25},
+                                                        Transition { level:5 , value: 45},
+                                                        Transition { level:10 , value: 50} ,
+                                                        Transition { level:20 , value: 100} ,
+                        ], level) as i32,
+                        hp: from_dungeon_level(&[
+                                                        Transition { level: 1, value: 20 },
+                                                        Transition { level:2 , value: 25},
+                                                        Transition { level:5 , value: 45},
+                                                        Transition { level:10 , value: 50} ,
+                                                        Transition { level:20 , value: 100} ,
+                        ], level) as i32,
+                        base_defense: (level / 2) as i32,
+                        base_power: 4 + (level) as i32,
+                        on_death: DeathCallback::Monster,
+                        xp: 5 * level as i32
+                    });
                     orc.ai = Some(Ai::Basic);
                     orc
                 }
                 "troll" => {
                     // create a troll
                     let mut troll = Object::new(x, y, TROLL, "troll", colors::DARKER_GREEN, true);
-                    troll.fighter = Some(Fighter{base_max_hp:60 , hp: 30, base_defense: 2, base_power: 8,
-                        on_death: DeathCallback::Monster, xp: 35 * level as i32});
+                    troll.fighter = Some(Fighter{
+                        base_max_hp: from_dungeon_level(&[
+                                                        Transition { level: 1, value: 40 },
+                                                        Transition { level:2 , value: 55},
+                                                        Transition { level:5 , value: 65},
+                                                        Transition { level:10 , value: 75} ,
+                                                        Transition { level:20 , value: 150} ,
+                        ], level) as i32,
+                        hp: from_dungeon_level(&[
+                                                        Transition { level: 1, value: 40 },
+                                                        Transition { level:2 , value: 55},
+                                                        Transition { level:5 , value: 65},
+                                                        Transition { level:10 , value: 75} ,
+                                                        Transition { level:20 , value: 150} ,
+                        ], level) as i32,
+                        base_defense: level as i32 + 2,
+                        base_power: level as i32 + 8,
+                        on_death: DeathCallback::Monster,
+                        xp: 35 * level as i32});
                     troll.ai = Some(Ai::Basic);
                     troll
                 }

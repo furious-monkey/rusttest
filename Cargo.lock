@@ -85,7 +85,7 @@ dependencies = [
 
 [[package]]
 name = "rouge"
-version = "0.1.0"
+version = "0.1.2"
 dependencies = [
  "rand 0.3.22 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde 1.0.84 (registry+https://github.com/rust-lang/crates.io-index)",
