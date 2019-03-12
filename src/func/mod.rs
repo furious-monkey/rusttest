@@ -263,7 +263,7 @@ pub fn new_game(tcod: &mut Tcod) -> (Vec<Object>, Game) {
     game.inventory.push(dagger);
 
     // a warm welcoming message!
-    game.log.add("Welcome stranger! Prepare to perish in the Tombs of the Ancient Kings.",
+    game.log.add("Welcome stranger! Prepare to perish in the Rouge Cachot.",
                  colors::RED);
 
     (objects, game)
