@@ -7,7 +7,8 @@
 extern crate tcod;
 extern crate rand;
 extern crate serde;
-#[macro_use] extern crate serde_derive;
+#[macro_use]
+extern crate serde_derive;
 extern crate serde_json;
 // the existing imports
 use std::io::{Read, Write};
@@ -23,8 +24,6 @@ use tcod::console::*;
 use tcod::colors::{self, Color};
 use tcod::map::{Map as FovMap, FovAlgorithm};
 
-use tcod::input::Key;
-use tcod::input::{self, Event, Mouse};
 use tcod::input::KeyCode::*;
 
 use rouge::types::*;
