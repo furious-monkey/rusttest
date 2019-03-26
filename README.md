@@ -1,6 +1,6 @@
 # rouge
 
-A small procedural rougelike written in Rust.
+A small procedural roguelike written in Rust.
 
 ## Screenshots 
 
@@ -16,7 +16,7 @@ __OR__
 - `cargo install --path ./`
 - `rouge`
 
-## Rules of the rouge
+## Rules of the rogue
 
 - One life or you restart.
 - You gain some heal each level you progress.
