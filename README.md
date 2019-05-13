@@ -18,10 +18,10 @@ __OR__
 
 ## Rules of the rogue
 
-- One life or you restart.
-- You gain some heal each level you progress.
+- Permadeath (one life)
+- You gain some health each level you progress.
 - You can only hold 26 items at a time.
-- Infinite levels. Dificulty progresses ove time
+- Infinite **procedural** levels. Dificulty progresses ove time
 
 ## Controls
 
