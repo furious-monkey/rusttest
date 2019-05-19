@@ -1,4 +1,4 @@
-# rouge
+# rouge (red in french)
 
 A small procedural roguelike written in Rust.
 
@@ -21,7 +21,7 @@ __OR__
 - Permadeath (one life)
 - You gain some health each level you progress.
 - You can only hold 26 items at a time.
-- Infinite **procedural** levels. Dificulty progresses ove time
+- Infinite **procedural** levels. Dificulty progresses over time
 
 ## Controls
 
